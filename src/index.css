@@ -1,0 +1,13 @@
+/* Use the prebuilt Tailwind index.css from the package as a fallback when
+	 the PostCSS/Tailwind plugin doesn't generate a runtime bundle during dev.
+	 This includes the full default theme and utility classes. */
+@import "tailwindcss/index.css";
+
+/* Hide scrollbars for a cleaner UI but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+.no-scrollbar {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
