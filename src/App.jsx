@@ -23,13 +23,13 @@ export default function App() {
   // --- 2. INITIAL STATE (Loads from Browser Memory or uses Defaults) ---
   const [companyInfo, setCompanyInfo] = useState(() => loadState('octa_company', {
     name: 'Octaship Logistics',
-    address: '123 Harbor View Drive',
+    address: '5000 Hwy 7, Markham, ON L3R 4M9',
     city: 'Port Logistics City',
     state: 'ST',
     zip: '90210',
-    country: 'United States',
-    phone: '+1 (555) 012-3456',
-    email: 'operations@octaship.com',
+    country: 'Canada',
+    phone: '+1(437 268-6660)',
+    email: 'support@octaship.com',
     website: 'www.octaship.com'
   }));
 
@@ -41,38 +41,39 @@ export default function App() {
     taxRate: 7.0,
   }));
 
+  // Start logistics empty so staff fill before printing/sending
   const [logisticsDetails, setLogisticsDetails] = useState(() => loadState('octa_logistics', {
-    origin: 'Shanghai, CN',
-    destination: 'Los Angeles, US',
-    vessel: 'Octa Voyager v.42',
-    bolNumber: 'OCTA-BL-8852',
-    incoterms: 'CIF',
-    containerNo: 'OCTU4289110'
+    origin: '',
+    destination: '',
+    vessel: '',
+    bolNumber: '',
+    incoterms: '',
+    containerNo: ''
   }));
 
+  // Start billTo and shipTo empty so staff can enter customer details
   const [billTo, setBillTo] = useState(() => loadState('octa_billto', {
-    name: 'Global Imports Ltd.',
-    address: '456 Commerce Blvd',
-    city: 'Metropolis',
-    state: 'NY',
-    zip: '10001',
-    country: 'USA',
-    contact: 'Jane Doe'
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
+    contact: ''
   }));
 
   const [shipTo, setShipTo] = useState(() => loadState('octa_shipto', {
-    name: 'Global Imports Warehouse 4',
-    address: '789 Industrial Pkwy',
-    city: 'Metropolis',
-    state: 'NY',
-    zip: '10001',
-    country: 'USA',
-    contact: 'Receiving Dept'
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
+    contact: ''
   }));
 
-  const [items, setItems] = useState(() => loadState('octa_items', [
-    { id: 1, description: 'Industrial Hydraulic Pumps', sku: 'PUMP-HYD-01', quantity: 5, unitPrice: 1200.00, weight: 45, unit: 'pcs', dimL: 50, dimW: 40, dimH: 30 },
-  ]));
+  // Start with an empty items array; user will add lines via the UI
+  const [items, setItems] = useState(() => loadState('octa_items', []));
 
   // --- 3. AUTO-SAVER ---
   useEffect(() => {
@@ -99,6 +100,9 @@ export default function App() {
     return acc + (volPerItem * item.quantity);
   }, 0);
 
+  // number of table columns depends on activeTab and whether edit column is present
+  const tableColCount = isEditing ? (activeTab === 'invoice' ? 6 : 7) : (activeTab === 'invoice' ? 5 : 6);
+
   // --- 5. ACTIONS ---
   const handlePrint = () => window.print();
   
@@ -119,6 +123,24 @@ export default function App() {
       localStorage.clear();
       window.location.reload();
     }
+  };
+
+  // Clear only customer/logistics/items (preserve companyInfo and invoiceDetails)
+  const handleClearForm = () => {
+    if (!confirm('Clear customer, logistics and items? This will NOT remove company info or invoice metadata.')) return;
+    setBillTo({ name: '', address: '', city: '', state: '', zip: '', country: '', contact: '' });
+    setShipTo({ name: '', address: '', city: '', state: '', zip: '', country: '', contact: '' });
+    setLogisticsDetails({ origin: '', destination: '', vessel: '', bolNumber: '', incoterms: '', containerNo: '' });
+    setItems([]);
+    // remove related saved keys so cleared values persist
+    try {
+      localStorage.removeItem('octa_billto');
+      localStorage.removeItem('octa_shipto');
+      localStorage.removeItem('octa_logistics');
+      localStorage.removeItem('octa_items');
+    } catch(e) {}
+    setSaveStatus('Form cleared');
+    setTimeout(() => setSaveStatus(''), 2000);
   };
 
   return (
@@ -148,6 +170,7 @@ export default function App() {
           <div className="flex items-center gap-3 flex-wrap justify-end w-full md:w-auto">
              {saveStatus && <span className="text-xs text-emerald-400 flex items-center gap-1"><Save className="w-3 h-3" /> {saveStatus}</span>}
              <button onClick={handleReset} className="p-2 text-slate-400 hover:text-red-400" title="Reset Data"><RotateCcw className="w-5 h-5" /></button>
+             <button onClick={handleClearForm} className="p-2 text-slate-400 hover:text-yellow-400" title="Clear Form"><Trash2 className="w-5 h-5" /></button>
              <button onClick={() => setIsEditing(!isEditing)} className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors text-sm"><Settings className="w-4 h-4" /> <span className="hidden sm:inline">{isEditing ? 'Preview' : 'Edit'}</span></button>
             <button onClick={handlePrint} className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors shadow-lg font-medium"><Printer className="w-4 h-4" /> <span className="hidden sm:inline">Print</span></button>
           </div>
@@ -188,16 +211,16 @@ export default function App() {
               </div>
               <div className="text-right w-full md:w-auto mt-4 md:mt-0">
                 <h2 className="text-4xl font-light text-slate-300 uppercase">{activeTab === 'invoice' ? 'Commercial Invoice' : 'Packing List'}</h2>
-                <div className="mt-4 text-sm flex flex-col items-end gap-1">
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-500 font-semibold">Ref #:</span>
-                        {isEditing ? <input className="text-right border-b w-32 outline-none" value={invoiceDetails.number} onChange={(e) => setInvoiceDetails({...invoiceDetails, number: e.target.value})} /> : <span className="font-mono">{invoiceDetails.number}</span>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-500 font-semibold">Date:</span>
-                        {isEditing ? <input type="date" className="text-right border-b w-32 outline-none" value={invoiceDetails.date} onChange={(e) => setInvoiceDetails({...invoiceDetails, date: e.target.value})} /> : <span>{invoiceDetails.date}</span>}
-                    </div>
-                </div>
+        <div className="mt-4 text-sm flex flex-col items-end gap-2">
+          <div className="flex flex-col sm:flex-row items-end gap-2 w-full sm:w-auto">
+            <span className="text-gray-500 font-semibold">Ref #:</span>
+            {isEditing ? <input className="text-right border-b w-full sm:w-32 outline-none p-2" value={invoiceDetails.number} onChange={(e) => setInvoiceDetails({...invoiceDetails, number: e.target.value})} /> : <span className="font-mono">{invoiceDetails.number}</span>}
+          </div>
+          <div className="flex flex-col sm:flex-row items-end gap-2 w-full sm:w-auto">
+            <span className="text-gray-500 font-semibold">Date:</span>
+            {isEditing ? <input type="date" className="text-right border-b w-full sm:w-32 outline-none p-2" value={invoiceDetails.date} onChange={(e) => setInvoiceDetails({...invoiceDetails, date: e.target.value})} /> : <span>{invoiceDetails.date}</span>}
+          </div>
+        </div>
               </div>
             </div>
           </div>
@@ -223,12 +246,12 @@ export default function App() {
                   <div className="text-sm">
                     {isEditing ? (
                       <div className="space-y-2">
-                        <input className="w-full border p-1 rounded font-bold" value={addr.name} onChange={(e) => idx === 0 ? setBillTo({...billTo, name: e.target.value}) : setShipTo({...shipTo, name: e.target.value})} placeholder="Company Name" />
-                        <textarea className="w-full border p-1 rounded h-20" value={addr.address} onChange={(e) => idx === 0 ? setBillTo({...billTo, address: e.target.value}) : setShipTo({...shipTo, address: e.target.value})} placeholder="Address" />
-                        <div className="flex gap-2">
-                           <input className="w-full border p-1" value={addr.city} onChange={(e) => idx === 0 ? setBillTo({...billTo, city: e.target.value}) : setShipTo({...shipTo, city: e.target.value})} placeholder="City" />
-                           <input className="w-20 border p-1" value={addr.state} onChange={(e) => idx === 0 ? setBillTo({...billTo, state: e.target.value}) : setShipTo({...shipTo, state: e.target.value})} placeholder="State" />
-                        </div>
+                <input className="w-full border p-2 rounded font-bold text-sm" value={addr.name} onChange={(e) => idx === 0 ? setBillTo({...billTo, name: e.target.value}) : setShipTo({...shipTo, name: e.target.value})} placeholder="Company Name" />
+                <textarea className="w-full border p-2 rounded h-20 text-sm" value={addr.address} onChange={(e) => idx === 0 ? setBillTo({...billTo, address: e.target.value}) : setShipTo({...shipTo, address: e.target.value})} placeholder="Address" />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input className="w-full sm:w-auto flex-1 border p-2" value={addr.city} onChange={(e) => idx === 0 ? setBillTo({...billTo, city: e.target.value}) : setShipTo({...shipTo, city: e.target.value})} placeholder="City" />
+                  <input className="w-28 border p-2" value={addr.state} onChange={(e) => idx === 0 ? setBillTo({...billTo, state: e.target.value}) : setShipTo({...shipTo, state: e.target.value})} placeholder="State" />
+                </div>
                       </div>
                     ) : (
                       <>
@@ -266,15 +289,23 @@ export default function App() {
                   {isEditing && <th className="py-3 w-8 print:hidden"></th>}
                 </tr>
               </thead>
-              <tbody className="text-gray-600">
+              <tbody className="text-gray-600 text-sm md:text-base">
+                {items.length === 0 && (
+                  <tr>
+                    <td colSpan={tableColCount} className="py-8 text-center text-gray-500">
+                      No items yet — tap "Add Item" to create your first line. Use the Add Item button below (mobile: full-width).
+                    </td>
+                  </tr>
+                )}
+
                 {items.map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 print:hover:bg-transparent">
                     <td className="py-4 font-mono text-gray-400">{index + 1}</td>
                     <td className="py-4">
                       {isEditing ? (
                         <div className="space-y-1">
-                          <input className="w-full font-bold border-b border-dashed outline-none" value={item.description} onChange={(e) => updateItem(item.id, 'description', e.target.value)} />
-                          <input className="w-full text-xs font-mono text-gray-500 border-b border-dashed outline-none" value={item.sku} placeholder="SKU" onChange={(e) => updateItem(item.id, 'sku', e.target.value)} />
+                          <input className="w-full p-2 text-sm md:text-sm font-bold border rounded outline-none" value={item.description} onChange={(e) => updateItem(item.id, 'description', e.target.value)} placeholder="Description" />
+                          <input className="w-full p-2 text-xs md:text-sm font-mono text-gray-500 border rounded outline-none" value={item.sku} placeholder="SKU" onChange={(e) => updateItem(item.id, 'sku', e.target.value)} />
                         </div>
                       ) : (
                         <div>
@@ -284,19 +315,19 @@ export default function App() {
                       )}
                     </td>
                     <td className="py-4 text-center">
-                      {isEditing ? <input type="number" className="w-16 text-center border rounded" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))} /> : <span className="font-medium">{item.quantity}</span>}
+                      {isEditing ? <input type="number" className="w-20 md:w-16 p-2 text-center border rounded" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))} /> : <span className="font-medium">{item.quantity}</span>}
                     </td>
 
                     {/* DYNAMIC COLUMNS */}
                     {activeTab === 'packing-list' ? (
                        <>
-                         <td className="py-4 text-right">{isEditing ? <input type="number" className="w-16 text-right border rounded" value={item.weight} onChange={(e) => updateItem(item.id, 'weight', Number(e.target.value))} /> : item.weight}</td>
+                         <td className="py-4 text-right">{isEditing ? <input type="number" className="w-20 md:w-16 p-2 text-right border rounded" value={item.weight} onChange={(e) => updateItem(item.id, 'weight', Number(e.target.value))} /> : item.weight}</td>
                          <td className="py-4 text-right font-mono text-xs">
                            {isEditing ? 
                              <div className="flex flex-col items-end gap-1">
-                                <input className="w-8 border text-right" value={item.dimL} onChange={(e) => updateItem(item.id, 'dimL', Number(e.target.value))} />
-                                <input className="w-8 border text-right" value={item.dimW} onChange={(e) => updateItem(item.id, 'dimW', Number(e.target.value))} />
-                                <input className="w-8 border text-right" value={item.dimH} onChange={(e) => updateItem(item.id, 'dimH', Number(e.target.value))} />
+                                <input className="w-14 md:w-8 p-2 border text-right" value={item.dimL} onChange={(e) => updateItem(item.id, 'dimL', Number(e.target.value))} />
+                                <input className="w-14 md:w-8 p-2 border text-right" value={item.dimW} onChange={(e) => updateItem(item.id, 'dimW', Number(e.target.value))} />
+                                <input className="w-14 md:w-8 p-2 border text-right" value={item.dimH} onChange={(e) => updateItem(item.id, 'dimH', Number(e.target.value))} />
                              </div>
                              : `${item.dimL}x${item.dimW}x${item.dimH}`
                            }
@@ -305,7 +336,7 @@ export default function App() {
                        </>
                     ) : (
                        <>
-                         <td className="py-4 text-right">{isEditing ? <input type="number" className="w-20 text-right border rounded" value={item.unitPrice} onChange={(e) => updateItem(item.id, 'unitPrice', Number(e.target.value))} /> : <span>${item.unitPrice.toFixed(2)}</span>}</td>
+                         <td className="py-4 text-right">{isEditing ? <input type="number" className="w-24 md:w-20 p-2 text-right border rounded" value={item.unitPrice} onChange={(e) => updateItem(item.id, 'unitPrice', Number(e.target.value))} /> : <span>${item.unitPrice.toFixed(2)}</span>}</td>
                          <td className="py-4 text-right font-bold text-slate-800">${(item.quantity * item.unitPrice).toFixed(2)}</td>
                        </>
                     )}
