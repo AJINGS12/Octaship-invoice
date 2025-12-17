@@ -46,9 +46,9 @@ export default function App() {
     origin: '',
     destination: '',
     vessel: '',
-    bol Number: '',
+    bolNumber: '',
     incoterms: '',
-    container No: ''
+    containerNo: ''
   }));
 
   // Start billTo and shipTo empty so staff can enter customer details
@@ -179,7 +179,7 @@ export default function App() {
 
       {/* --- MAIN DOCUMENT --- */}
       <main className="p-4 md:p-8 print:p-0">
-        <div className="max-w-5xl mx-auto bg-white shadow-2xl print:shadow-none min-h-[29.7cm] relative print:w-full">
+  <div className="max-w-5xl mx-auto bg-white shadow-2xl print:shadow-none relative print:w-full invoice-container">
           
           {/* HEADER */}
           <div className="p-8 md:p-12 border-b-4 border-blue-900">
@@ -378,7 +378,7 @@ export default function App() {
           </div>
           
           {/* DOCUMENT FOOTER */}
-          <div className="absolute bottom-0 w-full px-12 py-8 border-t border-gray-100 bg-gray-50 print:bg-white text-center text-xs text-gray-400">
+          <div className="absolute bottom-0 w-full px-12 py-8 border-t border-gray-100 bg-gray-50 print:bg-white text-center text-xs text-gray-400 invoice-footer">
              <div className="flex justify-center gap-8 mb-4">
                  <span>Incoterms: {logisticsDetails.incoterms}</span>
                  <span>Container: {logisticsDetails.containerNo}</span>

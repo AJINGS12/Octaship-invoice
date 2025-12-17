@@ -11,3 +11,111 @@
 	-ms-overflow-style: none;
 	scrollbar-width: none;
 }
+
+/* Print helpers to keep footer on the same page when possible */
+@media print {
+	/* Don't force an A4 min-height; allow content to determine page breaks */
+	.invoice-container {
+		min-height: auto !important;
+		page-break-inside: avoid;
+	}
+
+	/* In print, render footer as part of the document flow so it stays with content
+		 instead of being absolutely positioned and accidentally pushed to the next page. */
+	.invoice-footer {
+		position: relative !important;
+		bottom: auto !important;
+		left: auto !important;
+		right: auto !important;
+		padding-top: 0.5rem !important;
+		padding-bottom: 0.5rem !important;
+		page-break-inside: avoid;
+	}
+
+	/* Reduce large shadows/padding that can affect print layout */
+	.shadow-2xl { box-shadow: none !important; }
+}
+
+/* Screen readability tweaks: slightly larger fonts for invoice view (does not affect print) */
+@media screen {
+	.invoice-container {
+		font-size: 15px;
+		line-height: 1.45;
+	}
+
+	.invoice-container h1 {
+		font-size: 26px;
+		line-height: 1.1;
+	}
+
+	.invoice-container h2 {
+		font-size: 20px;
+	}
+
+	.invoice-container p, .invoice-container label, .invoice-container span {
+		font-size: 14px;
+	}
+
+	/* Make inputs slightly larger on screen for better visibility */
+	.invoice-container input, .invoice-container textarea {
+		font-size: 14px;
+		padding: 8px;
+	}
+}
+
+	/* Stronger print compacting: try to fit the invoice on a single A4 page when possible */
+	@page {
+		size: A4 portrait;
+		margin: 8mm;
+	}
+
+	@media print {
+			html, body {
+				width: 210mm;
+				height: 297mm;
+				margin: 0;
+				-webkit-print-color-adjust: exact;
+				print-color-adjust: exact;
+			}
+
+		/* Make the invoice more compact for print */
+		.invoice-container {
+			padding: 8mm !important;
+			max-height: 277mm !important; /* page height minus margins */
+			box-sizing: border-box;
+		}
+
+		/* Reduce spacing and font sizes */
+		.invoice-container h1 { font-size: 18px !important; }
+		.invoice-container h2 { font-size: 14px !important; }
+		.invoice-container p, .invoice-container label, .invoice-container span { font-size: 11px !important; }
+
+		/* Compact table cells */
+		table th, table td {
+			padding-top: 0.25rem !important;
+			padding-bottom: 0.25rem !important;
+			padding-left: 0.35rem !important;
+			padding-right: 0.35rem !important;
+			font-size: 11px !important;
+		}
+
+		/* Smaller inputs in print */
+		input, textarea { font-size: 11px !important; padding: 4px !important; }
+
+		/* Footer compact */
+		.invoice-footer { font-size: 10px !important; padding-top: 6px !important; padding-bottom: 6px !important; }
+
+		/* Avoid internal page breaks inside sections */
+		.invoice-container > * { page-break-inside: avoid; }
+
+		/* Hide UI elements that shouldn't print */
+		.print\:hidden, .no-print { display: none !important; }
+
+		/* If content still overflows, slightly scale everything down to try to fit */
+		@supports (transform: scale(0.99)) {
+			.invoice-container {
+				transform-origin: top left;
+				transform: scale(0.96);
+			}
+		}
+	}
