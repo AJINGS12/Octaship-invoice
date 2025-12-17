@@ -46,9 +46,9 @@ export default function App() {
     origin: '',
     destination: '',
     vessel: '',
-    bolNumber: '',
+    bol Number: '',
     incoterms: '',
-    containerNo: ''
+    container No: ''
   }));
 
   // Start billTo and shipTo empty so staff can enter customer details
@@ -384,7 +384,7 @@ export default function App() {
                  <span>Container: {logisticsDetails.containerNo}</span>
              </div>
              <p>Thank you for choosing Octaship Logistics. All business undertaken subject to our Standard Trading Conditions.</p>
-             <p className="mt-1">Computer Generated Document - No Signature Required unless specified.</p>
+             <p className="mt-1">No Signature Required unless specified.</p>
           </div>
 
         </div>
